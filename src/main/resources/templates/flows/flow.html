@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layouts/layout}">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+<body>
+
+<div layout:fragment="content" style="margin-left:25%;margin-right:25%">
+
+    <div class="raw">
+        <div class="col-2"></div>
+        <div class="col">
+            <div class="raw" style="margin-top: 100px;"></div>
+            <div class="raw">
+                <div class="col">파일 확장자 차단</div>
+            </div>
+            <div class="raw" style="margin-top: 20px;">
+                <div class="col">파일 확장자에 따라 특정 형식의 파일을 첨부하거나 전송하지 못하도록 제한한다.</div>
+            </div>
+            <div class="raw">
+                <div class="col">고정 확장자</div>
+                <div class="col">
+                    <input type="checkbox" value="" id="ext1">
+                </div>
+            </div>
+        </div>
+        <div class="col-2"></div>
+    </div>
+
+</div>
+
+</body>
+</html>
