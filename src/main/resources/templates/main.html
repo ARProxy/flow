@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layouts/layout1}">
+
+<th:block layout:fragment="script">
+    <script th:inline="javascript">
+        $(document).ready(function() {
+    // 체크박스와 레이블을 생성하고 페이지에 추가하는 함수
+    function createCheckboxAndLabel(id, value, label) {
+        const checkboxInput = $('<input>')
+            .attr('type', 'checkbox')
+            .attr('id', id)
+            .attr('name', 'extension')
+            .attr('value', value)
+            .change(sendCheckedStatuses);
+
+        const labelElement = $('<label>')
+            .attr('for', id)
+            .css('margin-right', '5px')
+            .text(label);
+
+        $('#checkbox-container').append(checkboxInput).append(labelElement);
+    }
+
+    // 체크된 체크박스들의 상태를 서버에 보내는 함수
+    function sendCheckedStatuses() {
+        const checkedStatuses = $('input[name="extension"]').map(function() {
+            return {
+                fixName: this.id,
+                fixStatus: this.checked
+            };
+        }).get();
+
+        console.log(checkedStatuses); // 확인을 위해 콘솔에 출력
+
+        // 서버에 AJAX 요청을 보냅니다.
+        $.ajax({
+            url: '/api/status',
+            type: 'POST',
+            contentType: 'application/json',
+            data: JSON.stringify(checkedStatuses),
+            error: function(xhr, status, error) {
+                console.error("Error sending statuses", error);
+            }
+        });
+    }
+    $('input[name="extension"]').change(sendCheckedStatuses);
+
+    function loadCheckboxStatuses() {
+        $.ajax({
+            url: '/api/status',
+            type: 'GET',
+            success: function(data) {
+                data.forEach(function(fix) {
+                    const checkbox = $('#' + fix.fixName);
+                    if (checkbox.length) {
+                        checkbox.prop('checked', fix.fixStatus);
+                    }
+                });
+            },
+            error: function(xhr, status, error) {
+                console.error("Error loading checkbox statuses", error);
+            }
+        });
+    }
+
+    // 체크박스 정보
+    const checkboxes = [
+                { id: 'bat', value: 'bat', label: 'bat' },
+                { id: 'cmd', value: 'cmd', label: 'cmd' },
+                { id: 'com', value: 'com', label: 'com' },
+                { id: 'cpl', value: 'cpl', label: 'cpl' },
+                { id: 'exe', value: 'exe', label: 'exe' },
+                { id: 'scr', value: 'scr', label: 'scr' },
+                { id: 'js',  value: 'js',  label: 'js' }
+            ];
+
+    // 각 체크박스 생성
+    checkboxes.forEach(function(checkbox) {
+        createCheckboxAndLabel(checkbox.id, checkbox.value, checkbox.label);
+    });
+
+    // 페이지 로드 시 체크박스 상태 불러오기
+    loadCheckboxStatuses();
+});
+
+    </script>
+</th:block>
+
+
+
+<div layout:fragment="content">
+    <div class="row justify-content-center">
+        <div class="col-md-5">
+            <div class="card">
+                <div class="card-body">
+                    <p class="text-center">파일 확장자에 따라 특정 형식의 파일을 차단하거나 접근하지 못하도록 제한해봅니다.</p>
+                    <hr>
+                    <div class="mb-3">
+                        <label class="form-label">고정 확장자</label>
+                        <div id="checkbox-container"></div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="customExtension" class="form-label">커스텀 확장자</label>
+                        <input type="text" class="form-control" id="customExtension" placeholder="확장자 입력">
+                    </div>
+                    <div class="mb-3">
+                        <div class="border p-2">
+                            <span class="badge bg-secondary">sh <span class="ms-1">&times;</span></span>
+                            <span class="badge bg-secondary">ju <span class="ms-1">&times;</span></span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

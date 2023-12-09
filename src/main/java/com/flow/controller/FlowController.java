@@ -11,8 +11,8 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/")
 public class FlowController {
 
-    @GetMapping(value = "flow")
+    @GetMapping(value = "")
     public String flowTest() {
-        return "flow";
+        return "main";
     }
 }
