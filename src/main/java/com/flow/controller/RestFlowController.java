@@ -25,4 +25,9 @@ public class RestFlowController {
         flowService.updateFixStatus(fixes);
         return ResponseEntity.ok().build();
     }
+    @GetMapping("/status")
+    public ResponseEntity<List<Fix>> getAllFix() {
+        List<Fix> fixes = flowService.getAllFix();
+        return ResponseEntity.ok(fixes);
+    }
 }

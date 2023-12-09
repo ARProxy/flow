@@ -26,4 +26,8 @@ public class FlowService {
                     });
         }
     }
+
+    public List<Fix> getAllFix() {
+        return fixRepository.findAll();
+    }
 }
