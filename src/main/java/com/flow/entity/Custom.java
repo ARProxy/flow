@@ -15,9 +15,9 @@ public class Custom {
     private Long id;
 
     @OneToOne
-    @JoinColumn(name = "fix_extension_id", referencedColumnName = "id")
+    @JoinColumn(name = "fix_id", referencedColumnName = "id")
     private Fix fix;
 
-    @Column(name = "custom_extension_name", nullable = false, length = 20)
+    @Column(name = "custom_name", nullable = false, length = 20)
     private String customName;
 }

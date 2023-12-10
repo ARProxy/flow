@@ -1,5 +1,7 @@
 package com.flow.controller;
 
+import com.flow.entity.Custom;
+import com.flow.entity.CustomDto;
 import com.flow.entity.Fix;
 import com.flow.repository.FixRepository;
 import com.flow.service.FlowService;
@@ -29,5 +31,16 @@ public class RestFlowController {
     public ResponseEntity<List<Fix>> getAllFix() {
         List<Fix> fixes = flowService.getAllFix();
         return ResponseEntity.ok(fixes);
+    }
+    @PostMapping("/addBadge")
+    public ResponseEntity<Custom> addBadge(@RequestBody CustomDto customDto) {
+        Custom custom = flowService.addCustomBadge(customDto.getCustomName());
+        return ResponseEntity.ok(custom);
+    }
+
+    @DeleteMapping("/deleteBadge")
+    public ResponseEntity<Void> deleteBadge(@RequestParam String customName) {
+        flowService.deleteCustomBadge(customName);
+        return ResponseEntity.ok().build();
     }
 }

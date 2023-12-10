@@ -6,85 +6,156 @@
 <th:block layout:fragment="script">
     <script th:inline="javascript">
         $(document).ready(function() {
-    // 체크박스와 레이블을 생성하고 페이지에 추가하는 함수
-    function createCheckboxAndLabel(id, value, label) {
-        const checkboxInput = $('<input>')
-            .attr('type', 'checkbox')
-            .attr('id', id)
-            .attr('name', 'extension')
-            .attr('value', value)
-            .change(sendCheckedStatuses);
+            function createCheckboxAndLabel(id, value, label) {
+                const checkboxInput = $('<input>')
+                    .attr('type', 'checkbox')
+                    .attr('id', id)
+                    .attr('name', 'extension')
+                    .attr('value', value)
+                    .change(sendCheckedStatuses);
 
-        const labelElement = $('<label>')
-            .attr('for', id)
-            .css('margin-right', '5px')
-            .text(label);
+                const labelElement = $('<label>')
+                    .attr('for', id)
+                    .css('margin-right', '5px')
+                    .text(label);
 
-        $('#checkbox-container').append(checkboxInput).append(labelElement);
-    }
-
-    // 체크된 체크박스들의 상태를 서버에 보내는 함수
-    function sendCheckedStatuses() {
-        const checkedStatuses = $('input[name="extension"]').map(function() {
-            return {
-                fixName: this.id,
-                fixStatus: this.checked
-            };
-        }).get();
-
-        console.log(checkedStatuses); // 확인을 위해 콘솔에 출력
-
-        // 서버에 AJAX 요청을 보냅니다.
-        $.ajax({
-            url: '/api/status',
-            type: 'POST',
-            contentType: 'application/json',
-            data: JSON.stringify(checkedStatuses),
-            error: function(xhr, status, error) {
-                console.error("Error sending statuses", error);
+                $('#checkbox-container').append(checkboxInput).append(labelElement);
             }
-        });
-    }
-    $('input[name="extension"]').change(sendCheckedStatuses);
 
-    function loadCheckboxStatuses() {
-        $.ajax({
-            url: '/api/status',
-            type: 'GET',
-            success: function(data) {
-                data.forEach(function(fix) {
-                    const checkbox = $('#' + fix.fixName);
-                    if (checkbox.length) {
-                        checkbox.prop('checked', fix.fixStatus);
+            function sendCheckedStatuses() {
+                const checkedStatuses = $('input[name="extension"]').map(function() {
+                    return {
+                        fixName: this.id,
+                        fixStatus: this.checked
+                    };
+                }).get();
+
+                console.log(checkedStatuses); // 확인을 위해 콘솔에 출력
+
+                $.ajax({
+                    url: '/api/status',
+                    type: 'POST',
+                    contentType: 'application/json',
+                    data: JSON.stringify(checkedStatuses),
+                    error: function(xhr, status, error) {
+                        console.error("Error sending statuses", error);
                     }
                 });
-            },
-            error: function(xhr, status, error) {
-                console.error("Error loading checkbox statuses", error);
+            }
+            $('input[name="extension"]').change(sendCheckedStatuses);
+
+            function loadCheckboxStatuses() {
+                $.ajax({
+                    url: '/api/status',
+                    type: 'GET',
+                    success: function(data) {
+                        data.forEach(function(fix) {
+                            const checkbox = $('#' + fix.fixName);
+                            if (checkbox.length) {
+                                checkbox.prop('checked', fix.fixStatus);
+                            }
+                        });
+                    },
+                    error: function(xhr, status, error) {
+                        console.error("Error loading checkbox statuses", error);
+                    }
+                });
+            }
+
+            const checkboxes = [
+                        { id: 'bat', value: 'bat', label: 'bat' },
+                        { id: 'cmd', value: 'cmd', label: 'cmd' },
+                        { id: 'com', value: 'com', label: 'com' },
+                        { id: 'cpl', value: 'cpl', label: 'cpl' },
+                        { id: 'exe', value: 'exe', label: 'exe' },
+                        { id: 'scr', value: 'scr', label: 'scr' },
+                        { id: 'js',  value: 'js',  label: 'js' }
+                    ];
+
+            checkboxes.forEach(function(checkbox) {
+                createCheckboxAndLabel(checkbox.id, checkbox.value, checkbox.label);
+            });
+
+            loadCheckboxStatuses();
+        });
+
+    $(document).ready(function() {
+        $('#customExtension').on('input', function() {
+            var inputLength = $(this).val().length;
+            if (inputLength > 20) {
+                $('#error-message').show();
+            } else {
+                $('#error-message').hide();
             }
         });
-    }
 
-    // 체크박스 정보
-    const checkboxes = [
-                { id: 'bat', value: 'bat', label: 'bat' },
-                { id: 'cmd', value: 'cmd', label: 'cmd' },
-                { id: 'com', value: 'com', label: 'com' },
-                { id: 'cpl', value: 'cpl', label: 'cpl' },
-                { id: 'exe', value: 'exe', label: 'exe' },
-                { id: 'scr', value: 'scr', label: 'scr' },
-                { id: 'js',  value: 'js',  label: 'js' }
-            ];
+        $('#addExtension').click(function() {
+            var extension = $('#customExtension').val();
+            if (extension.length > 0 && extension.length <= 20) {
 
-    // 각 체크박스 생성
-    checkboxes.forEach(function(checkbox) {
-        createCheckboxAndLabel(checkbox.id, checkbox.value, checkbox.label);
+                $.ajax({
+                    url: '/api/add',
+                    type: 'POST',
+                    data: { extension: extension },
+                    success: function(response) {
+                        console.log('Extension added:', response);
+                    },
+                    error: function(xhr, status, error) {
+                        console.error("Error adding extension", error);
+                    }
+                });
+            } else {
+                $('#error-message').show();
+            }
+        });
+
+        $('#addBadgeButton').click(function() {
+            var extension = $('#extensionInput').val().trim();
+            if(extension) {
+                $.ajax({
+                    url: 'api/addBadge',
+                    type: 'POST',
+                    contentType: 'application/json',
+                    data: JSON.stringify({ extension: extension }),
+                    success: function(response) {
+                        var badge = $('<span>')
+                            .addClass('badge bg-secondary')
+                            .css('margin-left', '5px')
+                            .css('color', 'white')
+                            .text(extension)
+                            .append($('<span>').addClass('ms-1').css('margin-left', '5px').text('×').click(function() {
+                                removeBadge(extension, badge);
+                            }));
+                        $('#badgeContainer').append(badge);
+                        $('#extensionInput').val('');
+                    },
+                    error: function(xhr, status, error) {
+                        if(xhr.responseText) {
+                            var errorMessage = JSON.parse(xhr.responseText).message;
+                            alert(errorMessage);
+                        } else {
+                            alert("오류가 발생했습니다.");
+                        }
+                    }
+                });
+            }
+        });
+
+        function removeBadge(extension, badgeElement) {
+            $.ajax({
+                url: 'api/deleteBadge',
+                type: 'DELETE',
+                contentType: 'application/json',
+                data: JSON.stringify({ extension: extension }),
+                success: function(response) {
+                    badgeElement.remove();
+                },
+                error: function(xhr, status, error) {
+                    console.error("삭제 실패", error);
+                }
+            });
+        }
     });
-
-    // 페이지 로드 시 체크박스 상태 불러오기
-    loadCheckboxStatuses();
-});
-
     </script>
 </th:block>
 
@@ -101,14 +172,19 @@
                         <label class="form-label">고정 확장자</label>
                         <div id="checkbox-container"></div>
                     </div>
-                    <div class="mb-3">
-                        <label for="customExtension" class="form-label">커스텀 확장자</label>
-                        <input type="text" class="form-control" id="customExtension" placeholder="확장자 입력">
+                    <div class="mb-1">
+                        <label class="form-label">커스텀 확장자</label>
+                    </div>
+                    <div class="mb-3" style="display: flex; align-items: center;">
+                        <input type="text" class="form-control" id="extensionInput" placeholder="확장자 입력" style="flex-grow: 1; margin-right: 10px;" maxlength="20">
+                        <button class="btn btn-dark opacity-75" id="addBadgeButton">+</button>
+                    </div>
+                    <div id="error-message" style="color: red; display: none; margin-bottom: 10px; font-size: 14px;">
+                        20글자를 초과할 수 없습니다.
                     </div>
                     <div class="mb-3">
-                        <div class="border p-2">
-                            <span class="badge bg-secondary">sh <span class="ms-1">&times;</span></span>
-                            <span class="badge bg-secondary">ju <span class="ms-1">&times;</span></span>
+                        <div class="card" style="height:250px; width: 100%;">
+                            <span id="badgeContainer"></span>
                         </div>
                     </div>
                 </div>
