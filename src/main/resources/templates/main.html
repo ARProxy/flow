@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org"
-      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout" xmlns="http://www.w3.org/1999/html"
       layout:decorate="~{layouts/layout1}">
 
 <th:block layout:fragment="script">
@@ -30,7 +30,7 @@
                     };
                 }).get();
 
-                console.log(checkedStatuses); // 확인을 위해 콘솔에 출력
+                console.log(checkedStatuses);
 
                 $.ajax({
                     url: '/api/status',
@@ -77,85 +77,226 @@
             });
 
             loadCheckboxStatuses();
-        });
 
-    $(document).ready(function() {
-        $('#customExtension').on('input', function() {
-            var inputLength = $(this).val().length;
-            if (inputLength > 20) {
-                $('#error-message').show();
-            } else {
-                $('#error-message').hide();
-            }
-        });
-
-        $('#addExtension').click(function() {
-            var extension = $('#customExtension').val();
-            if (extension.length > 0 && extension.length <= 20) {
-
-                $.ajax({
-                    url: '/api/add',
-                    type: 'POST',
-                    data: { extension: extension },
-                    success: function(response) {
-                        console.log('Extension added:', response);
-                    },
-                    error: function(xhr, status, error) {
-                        console.error("Error adding extension", error);
-                    }
-                });
-            } else {
-                $('#error-message').show();
-            }
-        });
-
-        $('#addBadgeButton').click(function() {
-            var extension = $('#extensionInput').val().trim();
-            if(extension) {
-                $.ajax({
-                    url: 'api/addBadge',
-                    type: 'POST',
-                    contentType: 'application/json',
-                    data: JSON.stringify({ extension: extension }),
-                    success: function(response) {
-                        var badge = $('<span>')
-                            .addClass('badge bg-secondary')
-                            .css('margin-left', '5px')
-                            .css('color', 'white')
-                            .text(extension)
-                            .append($('<span>').addClass('ms-1').css('margin-left', '5px').text('×').click(function() {
-                                removeBadge(extension, badge);
-                            }));
-                        $('#badgeContainer').append(badge);
-                        $('#extensionInput').val('');
-                    },
-                    error: function(xhr, status, error) {
-                        if(xhr.responseText) {
-                            var errorMessage = JSON.parse(xhr.responseText).message;
-                            alert(errorMessage);
-                        } else {
-                            alert("오류가 발생했습니다.");
-                        }
-                    }
-                });
-            }
-        });
-
-        function removeBadge(extension, badgeElement) {
-            $.ajax({
-                url: 'api/deleteBadge',
-                type: 'DELETE',
-                contentType: 'application/json',
-                data: JSON.stringify({ extension: extension }),
-                success: function(response) {
-                    badgeElement.remove();
-                },
-                error: function(xhr, status, error) {
-                    console.error("삭제 실패", error);
+            $('#extensionInput').on('input', function() {
+                var inputLength = $(this).val().length;
+                if (inputLength >= 20) {
+                    $('#error-message').show();
+                } else {
+                    $('#error-message').hide();
                 }
             });
-        }
-    });
+
+            $('#addBadgeButton').click(function() {
+                var extension = $('#extensionInput').val().trim();
+                if(extension && extension.length > 0 && extension.length <= 20) {
+                    $.ajax({
+                        url: 'api/addBadge',
+                        type: 'POST',
+                        contentType: 'application/json',
+                        data: JSON.stringify({ customName: extension }),
+                        success: function(response) {
+                            var badge = $('<span>')
+                                .addClass('badge bg-secondary')
+                                .css('margin-left', '5px')
+                                .css('color', 'white')
+                                .text(extension)
+                                .append($('<span>').addClass('ms-1').css('margin-left', '5px').text('×').click(function() {
+                                    removeBadge(extension, badge);
+                                }));
+                            $('#badgeContainer').append(badge);
+                            $('#extensionInput').val('');
+                            updateCustomCount();
+                        },
+                        error: function(xhr, status, error) {
+                            if(xhr.responseText) {
+                                var errorMessage = JSON.parse(xhr.responseText).message;
+                                alert(errorMessage);
+                            } else {
+                                alert("오류 발생");
+                            }
+                        }
+                    });
+                }
+            });
+
+            function removeBadge(extension, badgeElement) {
+                $.ajax({
+                    url: 'api/deleteBadge?customName=' + encodeURIComponent(extension),
+                    type: 'DELETE',
+                    success: function(response) {
+                        badgeElement.remove();
+                        updateCustomCount();
+                    },
+                    error: function(xhr, status, error) {
+                        console.error("삭제 실패", error);
+                    }
+                });
+            }
+
+            function loadCustomBadges() {
+                $.ajax({
+                    url: 'api/getCustomBadges',
+                    type: 'GET',
+                    success: function(response) {
+                        response.forEach(function(custom) {
+                            createBadge(custom.customName);
+                    });
+                },
+                    error: function(xhr, status, error) {
+                        console.error("배지 로드 실패", error);
+                    }
+                });
+            }
+
+            function createBadge(extension) {
+                var badge = $('<span>')
+                    .addClass('badge bg-secondary')
+                    .css('margin-left', '5px')
+                    .css('color', 'white')
+                    .text(extension)
+                    .append($('<span>').addClass('ms-1').css('margin-left', '5px').text('×').click(function() {
+                        removeBadge(extension, badge);
+                    }));
+                $('#badgeContainer').append(badge);
+            }
+
+            function updateCustomCount() {
+                $.ajax({
+                    url: 'api/customCount',
+                    type: 'GET',
+                    success: function(response) {
+                        $('#customCount').text(response + ' / 200');
+                    },
+                    error: function(xhr, status, error) {
+                        console.error("업데이트 실패", error);
+                    }
+                });
+            }
+
+            loadCustomBadges();
+            updateCustomCount();
+
+            $('#dropdownButton').click(function() {
+                $('#dropdownMenu').toggle();
+            });
+
+            $('#addExtensionButton').click(function() {
+                var extension = $('#extensionBlockInput').val().trim();
+                if (extension) {
+                    $.ajax({
+                        url: '/api/addFix',
+                        type: 'POST',
+                        contentType: 'application/json',
+                        data: JSON.stringify({ fixName: extension, fixStatus: false }),
+                        success: function(response) {
+
+                            var checkbox = $('<input>')
+                                .attr('type', 'checkbox')
+                                .attr('id', extension)
+                                .attr('name', 'blockedExtensions');
+                            var label = $('<label>')
+                                .attr('for', extension)
+                                .text(extension);
+                            var removeButton = $('<a>')
+                                .text('x')
+                                .css('margin-left', '5px')
+                                .css('margin-right', '5px')
+                                .css('color', 'red')
+                                .click(function() {
+                                    $(this).parent().remove();
+                                });
+                            var container = $('<span>')
+                                .append(checkbox)
+                                .append(label)
+                                .append(removeButton);
+                            $('#checkbox-container').append(container);
+
+                            $('#extensionBlockInput').val('');
+                            $('#dropdownMenu').hide();
+                        },
+                        error: function(xhr, status, error) {
+                            console.error("추가 실패", error);
+                            alert("오류가 발생했습니다: " + error);
+                        }
+                    });
+                }
+            });
+
+            $('#checkbox-container').on('change', 'input[type="checkbox"]', function() {
+                var fixes = $('input[type="checkbox"]').map(function() {
+                    return {
+                        fixName: this.id,
+                        fixStatus: this.checked
+                    };
+                }).get();
+
+                $.ajax({
+                    url: 'api/status',
+                    type: 'POST',
+                    contentType: 'application/json',
+                    data: JSON.stringify(fixes),
+                    success: function() {
+                        console.log("상태 업데이트 성공");
+                    },
+                    error: function(xhr, status, error) {
+                        console.error("상태 업데이트 실패", error);
+                    }
+                });
+            });
+
+            function loadFixes() {
+                $.ajax({
+                    url: '/api/getFix',
+                    type: 'GET',
+                    success: function(fixes) {
+                        fixes.forEach(function(fix) {
+                            var checkbox = $('<input>')
+                                .attr('type', 'checkbox')
+                                .attr('id', fix.fixName)
+                                .attr('name', 'blockedExtensions')
+                                .prop('checked', fix.fixStatus);
+                            var label = $('<label>')
+                                .attr('for', fix.fixName)
+                                .text(fix.fixName);
+                            var removeButton = $('<a>')
+                                .text('x')
+                                .css('margin-left', '5px')
+                                .css('margin-right', '5px')
+                                .css('color', 'red')
+                                .click(function() {
+                                    removeFix(fix.fixName);
+                                });
+                            var container = $('<span>')
+                                .append(checkbox)
+                                .append(label)
+                                .append(removeButton);
+                            $('#checkbox-container').append(container);
+                        });
+                    },
+                    error: function(xhr, status, error) {
+                        console.error("Fix 데이터 로드 실패", error);
+                    }
+                });
+            }
+
+            function removeFix(fixName) {
+                $.ajax({
+                    url: '/api/deleteFix?fixName=' + encodeURIComponent(fixName),
+                    type: 'DELETE',
+                    success: function(response) {
+                        $('#' + fixName).parent().remove();
+                    },
+                    error: function(xhr, status, error) {
+                        console.error("Fix 삭제 실패", error);
+                    }
+                });
+            }
+
+            loadFixes();
+
+        });
+
     </script>
 </th:block>
 
@@ -169,8 +310,12 @@
                     <p class="text-center">파일 확장자에 따라 특정 형식의 파일을 차단하거나 접근하지 못하도록 제한해봅니다.</p>
                     <hr>
                     <div class="mb-3">
-                        <label class="form-label">고정 확장자</label>
+                        <label class="form-label" id="dropdownButton" onclick="toggleDropdown()">차단 확장자&nbsp;&nbsp;➕</label>
                         <div id="checkbox-container"></div>
+                        <div id="dropdownMenu" style="display: none;">
+                            <input type="text" id="extensionBlockInput" placeholder="확장자 입력">
+                            <button class="btn btn-dark btn-sm opacity-75" id="addExtensionButton">+</button>
+                        </div>
                     </div>
                     <div class="mb-1">
                         <label class="form-label">커스텀 확장자</label>
@@ -185,6 +330,7 @@
                     <div class="mb-3">
                         <div class="card" style="height:250px; width: 100%;">
                             <span id="badgeContainer"></span>
+                            <div id="customCount" style="position: absolute; bottom: 10px; right: 10px;"></div>
                         </div>
                     </div>
                 </div>

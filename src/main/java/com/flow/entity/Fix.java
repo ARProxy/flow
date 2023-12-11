@@ -19,5 +19,4 @@ public class Fix {
 
     @Column(name = "fix_status", nullable = false)
     private boolean fixStatus;
-
 }

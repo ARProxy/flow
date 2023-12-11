@@ -2,6 +2,7 @@ package com.flow.service;
 
 import com.flow.entity.Custom;
 import com.flow.entity.Fix;
+import com.flow.entity.FixDto;
 import com.flow.repository.CustomRespository;
 import com.flow.repository.FixRepository;
 import jakarta.persistence.EntityNotFoundException;
@@ -38,7 +39,7 @@ public class FlowService {
 
     public Custom addCustomBadge(String customName) {
         Optional<Fix> existingFix = fixRepository.findByFixName(customName);
-        if(existingFix.isPresent()) {
+        if(existingFix.isPresent() && existingFix.get().isFixStatus()) {
             throw new IllegalStateException("해당 확장자는 사용할 수 없습니다.");
         }
         Optional<Custom> existingCustom = customRespository.findByCustomName(customName);
@@ -48,11 +49,36 @@ public class FlowService {
 
         Custom custom = new Custom();
         custom.setCustomName(customName);
+        if(existingFix.isPresent()) {
+            custom.setFix(existingFix.get());
+        } else {
+            custom.setFix(null);
+        }
         return customRespository.save(custom);
     }
     public void deleteCustomBadge(String customName) {
         Custom custom = customRespository.findByCustomName(customName)
                 .orElseThrow(() -> new EntityNotFoundException("없다"));
         customRespository.delete(custom);
+    }
+    public List<Custom> getAllCustoms() {
+        return customRespository.findAll();
+    }
+    public long countCustoms() {
+        return customRespository.count();
+    }
+    public Fix addFix(FixDto fixDto) {
+        Fix fix = new Fix();
+        fix.setFixName(fixDto.getFixName());
+        fix.setFixStatus(fixDto.isFixStatus());
+        return fixRepository.save(fix);
+    }
+    public void deleteFix(String fixName) {
+        Fix fix = fixRepository.findByFixName(fixName)
+                .orElseThrow(() -> new EntityNotFoundException("없다"));
+        fixRepository.delete(fix);
+    }
+    public List<Fix> getAllFixOver8() {
+        return fixRepository.findByIdGreaterThanEqual(8L);
     }
 }
