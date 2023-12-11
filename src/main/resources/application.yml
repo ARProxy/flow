@@ -1,12 +1,12 @@
 server:
-  port: 80
+  port: 8080
 
 spring:
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver
-    url: jdbc:mysql://localhost:3306/flow
-    username: root
-    password: Dongcci92!!
+    url: jdbc:mysql://49.50.175.216:3306/flow
+    username: flow
+    password: dongcci
 
 jpa:
   properties:
