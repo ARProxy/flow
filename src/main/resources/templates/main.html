@@ -166,7 +166,12 @@
                     url: 'api/customCount',
                     type: 'GET',
                     success: function(response) {
-                        $('#customCount').text(response + ' / 200');
+                        if(response > 200) {
+                            alert('200개를 초과할 수 없습니다.')
+                            $('#customCount').text('200 / 200');
+                        } else {
+                            $('#customCount').text(response + ' / 200');
+                        }
                     },
                     error: function(xhr, status, error) {
                         console.error("업데이트 실패", error);
